@@ -1,5 +1,5 @@
 from collections import namedtuple
-
+from typing import List
 message_template_default_name = "message_template.msg"
 
 class BlockTree:
@@ -120,7 +120,11 @@ class Message:
             absolute_id = relative_id
 
         return absolute_id
-            
+    def get_message_blocks(self):
+        output = []
+        for child in self._block_tree.children:
+            output.append(MessageBlock(child))
+        return output
 
 def get_messages():
     blocks = parse_message_template()
@@ -133,13 +137,38 @@ def get_messages_by_absolute_id():
         messages_dict[message.get_message_absolute_id()] = message
     return messages_dict
 
-def get_inner_blocks():
-    output = []
-    for message in get_messages():
-        for child in message._block_tree.children:
-            output.append(child)
-    return output
-
+class MessageBlock:
+    def __init__(self,block: BlockTree):
+        self._block_tree = block
+    def _get_lines(self):
+        return self._block_tree.inner_data.strip("\n").split("\n")
+    def get_signature(self):
+        lines = self._get_lines()
+        return lines[0].strip()
+    def get_variables(self):
+        lines = self._get_lines()
+        variables = []
+        for line in lines[1::]:
+            close_bracket = line.find("}")
+            if close_bracket >= 0:
+                line = line[0:close_bracket]
+            lst = line.strip().strip("{").strip().split(" ")
+            processed_lst = [e for e in lst if len(e) > 0]
+            variables.append(Variable(processed_lst))
+        return variables
+    
+class Variable:
+    def __init__(self,fragments: List[str]):
+        self.name = fragments[0]
+        self.type = " ".join(fragments[1::])
+    def convert_to_string(self):
+        return f"< Name: {self.name} | Type: {self.type} >"
+    def __str__(self):
+        return self.convert_to_string()
+    def __repr__(self):
+        return self.convert_to_string()
+        
+    
 def parse_inner_block(block: BlockTree):
     raw_data = block.inner_data
     open_bracket = raw_data.find("{")
