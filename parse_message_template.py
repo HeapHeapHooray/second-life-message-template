@@ -145,16 +145,21 @@ class MessageBlock:
     def get_signature(self):
         lines = self._get_lines()
         return lines[0].strip()
+    def get_signature_as_list(self):
+        return self.get_signature().split(" ")
+    def get_name(self):
+        return self.get_signature_as_list()[0]
     def get_variables(self):
         lines = self._get_lines()
         variables = []
-        for line in lines[1::]:
+        for line in lines[1:]:
             close_bracket = line.find("}")
             if close_bracket >= 0:
                 line = line[0:close_bracket]
             lst = line.strip().strip("{").strip().split(" ")
             processed_lst = [e for e in lst if len(e) > 0]
-            variables.append(Variable(processed_lst))
+            if len(processed_lst):
+                variables.append(Variable(processed_lst))
         return variables
     
 class Variable:
