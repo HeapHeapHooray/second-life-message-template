@@ -152,11 +152,15 @@ class MessageBlock:
     def get_variables(self):
         lines = self._get_lines()
         variables = []
-        for line in lines[1:]:
+        for line in lines[1::]:
             close_bracket = line.find("}")
             if close_bracket >= 0:
                 line = line[0:close_bracket]
-            lst = line.strip().strip("{").strip().split(" ")
+            preprocessed = line.strip()
+            if not preprocessed.startswith("{"):
+                print("Ignoring:\n",preprocessed)
+                continue
+            lst = preprocessed.strip("{").strip().split(" ")
             processed_lst = [e for e in lst if len(e) > 0]
             if len(processed_lst):
                 variables.append(Variable(processed_lst))
